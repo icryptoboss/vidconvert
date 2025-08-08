@@ -150,7 +150,7 @@ async def get_video_metadata(video_file: str):
         output = stdout.decode().strip().split('\n')
         width = int(output[0].strip())
         height = int(output[1].strip())
-        duration = int(float(output[2].strip()))
+        duration = int(float(output[2].strip().replace('\r', '')))
         return width, height, duration
     except Exception as e:
         logger.error(f"Error parsing video metadata: {e}")
@@ -193,7 +193,7 @@ async def help_command(client: Client, message: Message):
         "/speedtest - Run a speed test on the server."
     )
 
-@bot.on_message(filters.command("cancel"))
+@bot.on_message(filters.command("cancel") & filters.private)
 async def cancel_command(client: Client, message: Message):
     """
     Handles the /cancel command.
@@ -207,7 +207,7 @@ async def cancel_command(client: Client, message: Message):
     else:
         await message.reply_text("You have no active process to cancel.")
 
-@bot.on_message(filters.command("speedtest"))
+@bot.on_message(filters.command("speedtest") & filters.private)
 async def speedtest_command(client: Client, message: Message):
     """
     Handles the /speedtest command.
@@ -233,7 +233,11 @@ async def convert_video(client: Client, message: Message):
     """
     Handles incoming video files and converts them to a streamable format.
     """
-    user_id = message.from_user.id
+    if message.from_user:
+        user_id = message.from_user.id
+    else:
+        user_id = message.chat.id
+
     if user_id in active_conversions:
         await message.reply_text("You already have an active process. Please wait for it to complete or use /cancel.")
         return
