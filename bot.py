@@ -5,6 +5,7 @@ import random
 import time
 import math
 import json
+import speedtest
 
 from PIL import Image
 from pyrogram import filters
@@ -188,7 +189,8 @@ async def help_command(client: Client, message: Message):
         "**Commands:**\n"
         "/start - Display the welcome message.\n"
         "/help - Display this help message.\n"
-        "/cancel - Cancel the current operation."
+        "/cancel - Cancel the current operation.\n"
+        "/speedtest - Run a speed test on the server."
     )
 
 @bot.on_message(filters.command("cancel"))
@@ -204,6 +206,27 @@ async def cancel_command(client: Client, message: Message):
         await status_message.edit_text("Process canceled.")
     else:
         await message.reply_text("You have no active process to cancel.")
+
+@bot.on_message(filters.command("speedtest"))
+async def speedtest_command(client: Client, message: Message):
+    """
+    Handles the /speedtest command.
+    """
+    status_message = await message.reply_text("Running speed test...", quote=True)
+    st = speedtest.Speedtest()
+    st.get_best_server()
+    st.download()
+    st.upload()
+    results = st.results.dict()
+    
+    await status_message.edit_text(
+        "**Speed Test Results**\n\n"
+        f"**Ping:** {results['ping']} ms\n"
+        f"**Download:** {humanbytes(results['download'])}/s\n"
+        f"**Upload:** {humanbytes(results['upload'])}/s\n"
+        f"**ISP:** {results['client']['isp']}\n"
+        f"**Country:** {results['client']['country']}"
+    )
 
 @bot.on_message(filters.video | filters.document)
 async def convert_video(client: Client, message: Message):

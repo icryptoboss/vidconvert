@@ -1,2 +1,3 @@
 Pillow==10.4.0
 pyrogram==2.0.106
+speedtest-cli==2.1.3
