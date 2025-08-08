@@ -4,10 +4,9 @@ import os
 import random
 import time
 import math
+import json
 
 from PIL import Image
-from hachoir.metadata import extractMetadata
-from hachoir.parser import createParser
 from pyrogram import filters
 from pyrogram.client import Client
 from pyrogram.errors import UserNotParticipant
@@ -125,6 +124,37 @@ async def take_screen_shot(video_file: str, output_directory: str, ttl: int):
     else:
         return None
 
+async def get_video_metadata(video_file: str):
+    """
+    Gets video metadata using ffprobe.
+    """
+    ffprobe_cmd = [
+        "ffprobe",
+        "-v", "error",
+        "-show_entries", "stream=width,height,duration",
+        "-of", "default=noprint_wrappers=1:nokey=1",
+        video_file
+    ]
+    process = await asyncio.create_subprocess_exec(
+        *ffprobe_cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await process.communicate()
+    if stderr:
+        logger.error(f"Error getting video metadata: {stderr.decode()}")
+        return 0, 0, 0
+    
+    try:
+        output = stdout.decode().strip().split('\n')
+        width = int(output[0].strip())
+        height = int(output[1].strip())
+        duration = int(float(output[2].strip()))
+        return width, height, duration
+    except Exception as e:
+        logger.error(f"Error parsing video metadata: {e}")
+        return 0, 0, 0
+
 # Initialize the bot
 bot = Client(
     "VideoConverterBot",
@@ -220,17 +250,7 @@ async def convert_video(client: Client, message: Message):
         await status_message.edit_text("Processing your video...")
 
         # Extract metadata
-        duration = 0
-        width = 0
-        height = 0
-        metadata = extractMetadata(createParser(downloaded_file_path))
-        if metadata:
-            if metadata.has("duration"):
-                duration = metadata.get('duration').seconds
-            if metadata.has("width"):
-                width = metadata.get("width")
-            if metadata.has("height"):
-                height = metadata.get("height")
+        width, height, duration = await get_video_metadata(downloaded_file_path)
 
         # Generate thumbnail
         thumbnail_path = None

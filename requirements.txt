@@ -1,3 +1,2 @@
 Pillow==10.4.0
 pyrogram==2.0.106
-hachoir3==3.1.0

@@ -70,6 +70,10 @@ CMD ["python", "bot.py"]
     *   **Python:** Make sure you have Python 3.8 or higher installed.
     *   **Git:** Install Git if it's not already installed.
     *   **pip:** Install pip for Python 3.
+    *   **ffmpeg:** The bot uses `ffmpeg` to generate thumbnails and get video metadata. You can install it on Debian/Ubuntu with the following command:
+        ```
+        sudo apt update && sudo apt install ffmpeg -y
+        ```
 3.  **Clone the Repository:**
     ```
     git clone https://github.com/your-username/video-converter-bot.git
